@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Star, MapPin, ShieldCheck, User, Heart, Wifi, Wind, Utensils, Car, Monitor, Waves, Scissors, Coffee, Tv, Flame, Droplets, Dumbbell, Bath, ArrowLeft, Calendar, Users, BedSingle, BedDouble, Trash2, MessageSquare, Grid3X3, SearchX } from 'lucide-react';
+import { Star, MapPin, ShieldCheck, User, Heart, Wifi, Wind, Utensils, Car, Monitor, Waves, Scissors, Coffee, Tv, Flame, Droplets, Dumbbell, Bath, ArrowLeft, Calendar, Users, BedSingle, BedDouble, Trash2, MessageSquare, Grid3X3, SearchX, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { MOCK_PROPERTIES, HOST_DATA, MOCK_REVIEWS } from '@/lib/data';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -50,6 +50,17 @@ export default function PropertyPage() {
   const [showBooking, setShowBooking] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
   const [selectedDates, setSelectedDates] = useState<{ checkIn: string; checkOut: string } | null>(null);
+  const heroTouchX = React.useRef<number | null>(null);
+
+  const stepHero = (dir: 1 | -1) => {
+    const imgs = property?.images ?? [];
+    if (imgs.length <= 1) return;
+    setSelectedImage((i) =>
+      dir === 1
+        ? i === imgs.length - 1 ? 0 : i + 1
+        : i === 0 ? imgs.length - 1 : i - 1
+    );
+  };
 
   const openGallery = (index: number) => {
     setGalleryKey((k) => k + 1);
@@ -85,9 +96,48 @@ export default function PropertyPage() {
   return (
     <div className="pt-20 pb-24 lg:pb-12">
       {/* Gallery */}
-      <div className="relative aspect-[16/9] md:aspect-[21/9] overflow-hidden mb-6">
-        <img src={property.images[selectedImage]} alt={property.name} className="w-full h-full object-cover" loading="eager" fetchPriority="high" decoding="async" />
+      <div
+        className="relative aspect-[16/9] md:aspect-[21/9] overflow-hidden mb-6"
+        onTouchStart={(e) => { heroTouchX.current = e.touches[0].clientX; }}
+        onTouchEnd={(e) => {
+          if (heroTouchX.current === null) return;
+          const dx = e.changedTouches[0].clientX - heroTouchX.current;
+          heroTouchX.current = null;
+          if (Math.abs(dx) > 40) stepHero(dx < 0 ? 1 : -1);
+        }}
+      >
+        <SmartImage
+          src={property.images[selectedImage]}
+          alt={property.name}
+          eager
+          sizes="100vw"
+          className="w-full h-full"
+          imgClassName="transition-opacity duration-200"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent" />
+
+        {property.images.length > 1 && (
+          <div className="absolute bottom-4 left-4 flex items-center gap-2">
+            <button
+              onClick={() => stepHero(-1)}
+              aria-label="Previous photo"
+              className="hidden sm:grid place-items-center w-11 h-11 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-golden"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <span className="px-2.5 py-1 bg-black/45 text-white text-xs font-bold rounded-full backdrop-blur-md">
+              {selectedImage + 1} / {property.images.length}
+            </span>
+            <button
+              onClick={() => stepHero(1)}
+              aria-label="Next photo"
+              className="hidden sm:grid place-items-center w-11 h-11 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-golden"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
+
         <button
           onClick={() => openGallery(selectedImage)}
           aria-label="View all photos"

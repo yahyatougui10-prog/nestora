@@ -12,6 +12,26 @@
   --radius-md: 16px;
   --radius-lg: 24px;
   --radius-xl: 32px;
+
+  --shadow-card: 0 1px 2px rgba(2, 31, 89, 0.05), 0 8px 24px rgba(2, 31, 89, 0.06);
+  --shadow-lift: 0 2px 4px rgba(2, 31, 89, 0.06), 0 16px 40px rgba(2, 31, 89, 0.14);
+  --glow-gold: rgba(255, 185, 9, 0.16);
+  --glow-orange: rgba(251, 134, 5, 0.12);
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 150ms;
+  --dur-med: 250ms;
+  --dur-slow: 450ms;
+}
+
+@theme inline {
+  --color-navy: var(--navy);
+  --color-golden: var(--gold);
+  --color-orange: var(--orange);
+  --color-cream: var(--cream);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --shadow-card: var(--shadow-card);
+  --shadow-lift: var(--shadow-lift);
 }
 
 @theme inline {
@@ -63,8 +83,104 @@ body {
   background-image: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(2, 31, 89, 0.05) 50%,
+    rgba(255, 185, 9, 0.08) 50%,
     transparent 100%
+  );
+}
+
+/*
+ * ── Moroccan zellige patterns ─────────────────────────────
+ * Lightweight SVG tile patterns (single repeating 48px tile).
+ * Layer them over a background color; keep opacity low so
+ * content stays readable.
+ */
+.pattern-zellige {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23021F59' stroke-linejoin='round'%3E%3Cpath stroke-opacity='0.10' d='M24 6 L28.6 19.4 L42 24 L28.6 28.6 L24 42 L19.4 28.6 L6 24 L19.4 19.4 Z'/%3E%3Cpath stroke-opacity='0.07' d='M24 15 L26.4 21.6 L33 24 L26.4 26.4 L24 33 L21.6 26.4 L15 24 L21.6 21.6 Z'/%3E%3Ccircle cx='24' cy='24' r='1.5' fill='%23021F59' fill-opacity='0.12' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 48px 48px;
+}
+
+.pattern-zellige-gold {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23FFB909' stroke-linejoin='round'%3E%3Cpath stroke-opacity='0.14' d='M24 6 L28.6 19.4 L42 24 L28.6 28.6 L24 42 L19.4 28.6 L6 24 L19.4 19.4 Z'/%3E%3Cpath stroke-opacity='0.10' d='M24 15 L26.4 21.6 L33 24 L26.4 26.4 L24 33 L21.6 26.4 L15 24 L21.6 21.6 Z'/%3E%3Ccircle cx='24' cy='24' r='1.5' fill='%23FFB909' fill-opacity='0.16' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 48px 48px;
+}
+
+/*
+ * ── Moroccan arch utilities ───────────────────────────────
+ */
+.arch-top {
+  border-radius: 999px 999px 0 0;
+}
+
+.arch-bottom {
+  border-radius: 0 0 999px 999px;
+}
+
+.arch-card {
+  border-radius: 999px 999px var(--radius-lg) var(--radius-lg);
+}
+
+.arch-card-lg {
+  border-radius: 999px 999px var(--radius-xl) var(--radius-xl);
+}
+
+.button-press {
+  transition: transform var(--dur-fast) var(--ease-premium), box-shadow var(--dur-med) var(--ease-premium);
+}
+
+.button-press:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* 8-point zellige star glyph (16x16 viewBox) reused as an accent */
+.zellige-star {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cg fill='none' stroke='%23FFB909' stroke-width='1.1' stroke-linejoin='round'%3E%3Cpath d='M8 1.5 L9.6 6.4 L14.5 8 L9.6 9.6 L8 14.5 L6.4 9.6 L1.5 8 L6.4 6.4 Z'/%3E%3Cpath d='M8 5 L8.9 7.1 L11 8 L8.9 8.9 L8 11 L7.1 8.9 L5 8 L7.1 7.1 Z'/%3E%3Ccircle cx='8' cy='8' r='0.9' fill='%23FFB909' fill-opacity='0.55' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+/* Decorative ornament divider: a gold star between two fading lines */
+.ornament-divider {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ornament-divider::before,
+.ornament-divider::after {
+  content: "";
+  height: 1px;
+  width: 3.5rem;
+}
+
+.ornament-divider::before {
+  background: linear-gradient(90deg, transparent, var(--gold));
+}
+
+.ornament-divider::after {
+  background: linear-gradient(90deg, var(--gold), transparent);
+}
+
+/*
+ * ── Lantern light (golden-hour atmosphere) ────────────────
+ * Soft radial glows — use sparingly, never with heavy blur.
+ */
+.glow-lantern {
+  background: radial-gradient(
+    closest-side,
+    var(--glow-orange),
+    rgba(255, 185, 9, 0.05) 55%,
+    transparent 75%
+  );
+}
+
+.glow-gold {
+  background: radial-gradient(
+    closest-side,
+    var(--glow-gold),
+    transparent 72%
   );
 }
 
@@ -79,6 +195,19 @@ body {
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
+}
+
+@keyframes floatSoft {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+.animate-float-soft {
+  animation: floatSoft 9s ease-in-out infinite;
 }
 
 @keyframes slideUp {
@@ -130,6 +259,21 @@ body {
   outline: 2px solid var(--gold);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--navy);
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (pointer: coarse) {
+  a, button, [role="button"] {
+    touch-action: manipulation;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -23,32 +23,69 @@ const SORT_OPTIONS = [
 ];
 
 const RATING_OPTIONS = [4.5, 4.0, 3.5];
+const PRICE_MAX = 1000;
+
+function parsePrice(value: string | null, fallback: number): number {
+  if (!value) return fallback;
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+}
 
 export default function ExploreContent() {
   const urlParams = useSearchParams();
-  const [sortBy, setSortBy] = useState<string>(urlParams.get('sortBy') || 'recommended');
-  const [priceFilter, setPriceFilter] = useState<[number, number]>([0, 1000]);
-  const [ratingFilter, setRatingFilter] = useState<number | null>(null);
-  const [typeFilter, setTypeFilter] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<string>(() => {
+    const s = urlParams.get('sortBy');
+    return SORT_OPTIONS.some((o) => o.value === s) && s ? s : 'recommended';
+  });
+  const [priceFilter, setPriceFilter] = useState<[number, number]>(() => [
+    Math.min(parsePrice(urlParams.get('minPrice'), 0), PRICE_MAX),
+    Math.min(parsePrice(urlParams.get('maxPrice'), PRICE_MAX), PRICE_MAX),
+  ]);
+  const [ratingFilter, setRatingFilter] = useState<number | null>(() => {
+    const r = Number(urlParams.get('rating'));
+    return Number.isFinite(r) && r > 0 ? r : null;
+  });
+  const [typeFilter, setTypeFilter] = useState<string[]>(() =>
+    (urlParams.get('type') || '').split(',').filter(Boolean)
+  );
+  const [bedroomsMin, setBedroomsMin] = useState<number | null>(null);
+  const [bathsMin, setBathsMin] = useState<number | null>(null);
+  const [guestsMin, setGuestsMin] = useState<number | null>(null);
+  const [amenitiesFilter, setAmenitiesFilter] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
-  const [draftPrice, setDraftPrice] = useState<[number, number]>([0, 1000]);
+  const [draftPrice, setDraftPrice] = useState<[number, number]>([0, PRICE_MAX]);
   const [draftRating, setDraftRating] = useState<number | null>(null);
   const [draftTypes, setDraftTypes] = useState<string[]>([]);
+  const [draftBedroomsMin, setDraftBedroomsMin] = useState<number | null>(null);
+  const [draftBathsMin, setDraftBathsMin] = useState<number | null>(null);
+  const [draftGuestsMin, setDraftGuestsMin] = useState<number | null>(null);
+  const [draftAmenities, setDraftAmenities] = useState<string[]>([]);
 
   const sortWrapperRef = useRef<HTMLDivElement>(null);
 
   const location = urlParams.get('location') || urlParams.get('destination') || 'All destinations';
   const guestsParam = urlParams.get('guests');
-  const guests = guestsParam ? Math.max(1, parseInt(guestsParam) || 1) : 2;
+  const guests = guestsParam ? Math.max(1, parseInt(guestsParam, 10) || 1) : 2;
 
   const types = useMemo(
     () => Array.from(new Set(MOCK_PROPERTIES.map((p) => p.type))),
     []
   );
+
+  const amenities = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of MOCK_PROPERTIES) {
+      for (const a of p.amenities ?? []) counts.set(a, (counts.get(a) || 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([name]) => name);
+  }, []);
 
   const filtered = useMemo(() => {
     let results = [...MOCK_PROPERTIES];
@@ -62,9 +99,15 @@ export default function ExploreContent() {
       );
     }
     if (priceFilter[0] > 0) results = results.filter((p) => p.price >= priceFilter[0]);
-    if (priceFilter[1] < 1000) results = results.filter((p) => p.price <= priceFilter[1]);
+    if (priceFilter[1] < PRICE_MAX) results = results.filter((p) => p.price <= priceFilter[1]);
     if (ratingFilter) results = results.filter((p) => p.rating >= ratingFilter);
     if (typeFilter.length > 0) results = results.filter((p) => typeFilter.includes(p.type));
+    if (bedroomsMin) results = results.filter((p) => p.bedrooms >= bedroomsMin);
+    if (bathsMin) results = results.filter((p) => p.baths >= bathsMin);
+    if (guestsMin) results = results.filter((p) => p.guests >= guestsMin);
+    if (amenitiesFilter.length > 0) {
+      results = results.filter((p) => amenitiesFilter.every((a) => (p.amenities ?? []).includes(a)));
+    }
     switch (sortBy) {
       case 'priceLow': results.sort((a, b) => a.price - b.price); break;
       case 'priceHigh': results.sort((a, b) => b.price - a.price); break;
@@ -72,14 +115,18 @@ export default function ExploreContent() {
       case 'reviews': results.sort((a, b) => b.reviews - a.reviews); break;
     }
     return results;
-  }, [location, priceFilter, ratingFilter, typeFilter, sortBy]);
+  }, [location, priceFilter, ratingFilter, typeFilter, bedroomsMin, bathsMin, guestsMin, amenitiesFilter, sortBy]);
 
   const sortLabel = SORT_OPTIONS.find((o) => o.value === sortBy)?.label || 'Recommended';
 
   const activeFilterCount =
-    (priceFilter[0] > 0 || priceFilter[1] < 1000 ? 1 : 0) +
+    (priceFilter[0] > 0 || priceFilter[1] < PRICE_MAX ? 1 : 0) +
     (ratingFilter ? 1 : 0) +
-    typeFilter.length;
+    typeFilter.length +
+    (bedroomsMin ? 1 : 0) +
+    (bathsMin ? 1 : 0) +
+    (guestsMin ? 1 : 0) +
+    amenitiesFilter.length;
 
   const draftCount = useMemo(() => {
     let results = [...MOCK_PROPERTIES];
@@ -93,11 +140,17 @@ export default function ExploreContent() {
       );
     }
     if (draftPrice[0] > 0) results = results.filter((p) => p.price >= draftPrice[0]);
-    if (draftPrice[1] < 1000) results = results.filter((p) => p.price <= draftPrice[1]);
+    if (draftPrice[1] < PRICE_MAX) results = results.filter((p) => p.price <= draftPrice[1]);
     if (draftRating) results = results.filter((p) => p.rating >= draftRating);
     if (draftTypes.length > 0) results = results.filter((p) => draftTypes.includes(p.type));
+    if (draftBedroomsMin) results = results.filter((p) => p.bedrooms >= draftBedroomsMin);
+    if (draftBathsMin) results = results.filter((p) => p.baths >= draftBathsMin);
+    if (draftGuestsMin) results = results.filter((p) => p.guests >= draftGuestsMin);
+    if (draftAmenities.length > 0) {
+      results = results.filter((p) => draftAmenities.every((a) => (p.amenities ?? []).includes(a)));
+    }
     return results.length;
-  }, [location, draftPrice, draftRating, draftTypes]);
+  }, [location, draftPrice, draftRating, draftTypes, draftBedroomsMin, draftBathsMin, draftGuestsMin, draftAmenities]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -129,6 +182,10 @@ export default function ExploreContent() {
     setDraftPrice(priceFilter);
     setDraftRating(ratingFilter);
     setDraftTypes(typeFilter);
+    setDraftBedroomsMin(bedroomsMin);
+    setDraftBathsMin(bathsMin);
+    setDraftGuestsMin(guestsMin);
+    setDraftAmenities(amenitiesFilter);
     setSheetOpen(true);
   };
 
@@ -136,14 +193,32 @@ export default function ExploreContent() {
     setPriceFilter(draftPrice);
     setRatingFilter(draftRating);
     setTypeFilter(draftTypes);
+    setBedroomsMin(draftBedroomsMin);
+    setBathsMin(draftBathsMin);
+    setGuestsMin(draftGuestsMin);
+    setAmenitiesFilter(draftAmenities);
     setSheetOpen(false);
   };
 
   const resetAll = () => {
-    setPriceFilter([0, 1000]);
+    setPriceFilter([0, PRICE_MAX]);
     setRatingFilter(null);
     setTypeFilter([]);
+    setBedroomsMin(null);
+    setBathsMin(null);
+    setGuestsMin(null);
+    setAmenitiesFilter([]);
     setShowFilters(false);
+  };
+
+  const resetDraft = () => {
+    setDraftPrice([0, PRICE_MAX]);
+    setDraftRating(null);
+    setDraftTypes([]);
+    setDraftBedroomsMin(null);
+    setDraftBathsMin(null);
+    setDraftGuestsMin(null);
+    setDraftAmenities([]);
   };
 
   const chipClass = (active: boolean) =>
@@ -157,8 +232,12 @@ export default function ExploreContent() {
   return (
     <div className="min-h-screen bg-[#FAF7F2]">
       <section className="pt-28 pb-8 px-4 sm:px-6 bg-gradient-to-b from-navy via-navy/95 to-navy/80 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+        <div className="absolute inset-0 pattern-zellige-gold opacity-30" />
+        <div aria-hidden className="absolute -top-20 -right-20 w-[520px] h-[520px] glow-gold opacity-40 pointer-events-none" />
         <div className="max-w-7xl mx-auto relative z-10">
+          <div className="ornament-divider mb-4">
+            <span aria-hidden className="zellige-star text-lg text-golden" />
+          </div>
           <h1 className="text-4xl md:text-6xl font-black text-white mb-3 tracking-tight">Explore Stays</h1>
           <p className="text-white/70 text-base md:text-lg mb-8 max-w-xl">Find a place that feels like home. {filtered.length} stays near {location}.</p>
           <PremiumSearchBar />
@@ -256,32 +335,92 @@ export default function ExploreContent() {
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-3xl border border-cream/20 shadow-sm p-5 mb-2 space-y-4"
+              className="bg-white rounded-3xl border border-cream/20 shadow-sm p-5 mb-2 space-y-5"
             >
-              <div>
-                <h3 className="font-black text-navy text-sm mb-2.5">Property type</h3>
-                <div className="flex flex-wrap gap-2">
-                  {types.map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setTypeFilter((p) => (p.includes(t) ? p.filter((x) => x !== t) : [...p, t]))}
-                      className={chipClass(typeFilter.includes(t))}
-                    >
-                      {t}
-                    </button>
-                  ))}
+              <div className="grid md:grid-cols-2 gap-5">
+                <div>
+                  <h3 className="font-black text-navy text-sm mb-2.5">Property type</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {types.map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setTypeFilter((p) => (p.includes(t) ? p.filter((x) => x !== t) : [...p, t]))}
+                        className={chipClass(typeFilter.includes(t))}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-black text-navy text-sm mb-2.5">Minimum rating</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {RATING_OPTIONS.map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => setRatingFilter(ratingFilter === r ? null : r)}
+                        className={chipClass(ratingFilter === r)}
+                      >
+                        ★ {r}+
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="grid md:grid-cols-3 gap-5">
+                <div>
+                  <h3 className="font-black text-navy text-sm mb-2.5">Bedrooms</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {[2, 3, 4].map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setBedroomsMin(bedroomsMin === n ? null : n)}
+                        className={chipClass(bedroomsMin === n)}
+                      >
+                        {n}+
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-black text-navy text-sm mb-2.5">Baths</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {[2, 3].map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setBathsMin(bathsMin === n ? null : n)}
+                        className={chipClass(bathsMin === n)}
+                      >
+                        {n}+
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-black text-navy text-sm mb-2.5">Guests</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {[2, 4, 6, 8].map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setGuestsMin(guestsMin === n ? null : n)}
+                        className={chipClass(guestsMin === n)}
+                      >
+                        {n}+
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div>
-                <h3 className="font-black text-navy text-sm mb-2.5">Minimum rating</h3>
+                <h3 className="font-black text-navy text-sm mb-2.5">Amenities</h3>
                 <div className="flex flex-wrap gap-2">
-                  {RATING_OPTIONS.map((r) => (
+                  {amenities.map((a) => (
                     <button
-                      key={r}
-                      onClick={() => setRatingFilter(ratingFilter === r ? null : r)}
-                      className={chipClass(ratingFilter === r)}
+                      key={a}
+                      onClick={() => setAmenitiesFilter((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]))}
+                      className={chipClass(amenitiesFilter.includes(a))}
                     >
-                      ★ {r}+
+                      {a}
                     </button>
                   ))}
                 </div>
@@ -453,11 +592,71 @@ export default function ExploreContent() {
                   ))}
                 </div>
               </div>
+
+              <div>
+                <h4 className="font-black text-navy text-sm mb-2.5">Bedrooms</h4>
+                <div className="flex flex-wrap gap-2">
+                  {[2, 3, 4].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setDraftBedroomsMin(draftBedroomsMin === n ? null : n)}
+                      className={chipClass(draftBedroomsMin === n)}
+                    >
+                      {n}+
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-black text-navy text-sm mb-2.5">Baths</h4>
+                <div className="flex flex-wrap gap-2">
+                  {[2, 3].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setDraftBathsMin(draftBathsMin === n ? null : n)}
+                      className={chipClass(draftBathsMin === n)}
+                    >
+                      {n}+
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-black text-navy text-sm mb-2.5">Guests</h4>
+                <div className="flex flex-wrap gap-2">
+                  {[2, 4, 6, 8].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setDraftGuestsMin(draftGuestsMin === n ? null : n)}
+                      className={chipClass(draftGuestsMin === n)}
+                    >
+                      {n}+
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-black text-navy text-sm mb-2.5">Amenities</h4>
+                <div className="flex flex-wrap gap-2">
+                  {amenities.map((a) => (
+                    <button
+                      key={a}
+                      onClick={() => setDraftAmenities((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]))}
+                      className={chipClass(draftAmenities.includes(a))}
+                    >
+                      {a}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm px-5 py-4 flex items-center gap-3 border-t border-navy/5">
               <button
-                onClick={() => { setDraftPrice([0, 1000]); setDraftRating(null); setDraftTypes([]); }}
+                onClick={resetDraft}
                 className="flex-1 px-4 py-3.5 rounded-xl border border-navy/10 text-sm font-bold text-navy hover:bg-cream/40 transition-colors"
               >
                 Reset

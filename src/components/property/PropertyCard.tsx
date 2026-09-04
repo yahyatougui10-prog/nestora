@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Star, Zap } from 'lucide-react';
@@ -20,8 +20,25 @@ function plural(n: number, word: string): string {
 export default function PropertyCard({ property, eager }: Props) {
   const { toggleFavorite, isFavorite } = useFavorites();
   const [imgIdx, setImgIdx] = useState(0);
+  const touchStartX = useRef<number | null>(null);
   const images = property.images?.length ? property.images : [property.image];
   const fav = isFavorite(property.id);
+
+  const goTo = (dir: 1 | -1) =>
+    setImgIdx((i) =>
+      dir === 1 ? (i === images.length - 1 ? 0 : i + 1) : i === 0 ? images.length - 1 : i - 1
+    );
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(dx) > 40) goTo(dx < 0 ? 1 : -1);
+  };
 
   const toggleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -32,13 +49,13 @@ export default function PropertyCard({ property, eager }: Props) {
   const prev = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setImgIdx((i) => (i === 0 ? images.length - 1 : i - 1));
+    goTo(-1);
   };
 
   const next = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setImgIdx((i) => (i === images.length - 1 ? 0 : i + 1));
+    goTo(1);
   };
 
   return (
@@ -47,7 +64,11 @@ export default function PropertyCard({ property, eager }: Props) {
       className="group block bg-white rounded-3xl overflow-hidden shadow-lg border border-cream/20 hover:shadow-2xl hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-golden focus-visible:ring-offset-2 transition-[box-shadow,transform] duration-200"
       aria-label={property.name}
     >
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div
+        className="relative aspect-[4/3] overflow-hidden"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         <SmartImage
           src={images[imgIdx]}
           alt={property.name}

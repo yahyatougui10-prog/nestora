@@ -37,11 +37,11 @@ const TABS = [
   { key: 'earnings', label: 'Earnings', href: '/host/earnings' },
 ];
 
-const STATUS_META: Record<HostReservation['status'], { label: string; cls: string }> = {
-  confirmed: { label: 'Confirmed', cls: 'bg-green-100 text-green-700' },
-  pending: { label: 'Pending', cls: 'bg-amber-100 text-amber-700' },
-  completed: { label: 'Completed', cls: 'bg-navy/10 text-navy' },
-  cancelled: { label: 'Cancelled', cls: 'bg-red-100 text-red-600' },
+const STATUS_META: Record<HostReservation['status'], { label: string; cls: string; dot: string }> = {
+  confirmed: { label: 'Confirmed', cls: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
+  pending: { label: 'Pending', cls: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
+  completed: { label: 'Completed', cls: 'bg-navy/10 text-navy', dot: 'bg-navy' },
+  cancelled: { label: 'Cancelled', cls: 'bg-red-100 text-red-600', dot: 'bg-red-500' },
 };
 
 export default function HostReservationsPage() {
@@ -91,8 +91,10 @@ export default function HostReservationsPage() {
       </div>
 
       {visible.length === 0 ? (
-        <div className="text-center py-24 bg-white dark:bg-navy/30 rounded-3xl">
-          <div className="text-6xl mb-4">📅</div>
+        <div className="text-center py-24 bg-white dark:bg-navy/30 rounded-3xl border border-cream/20">
+          <div aria-hidden className="ornament-divider mx-auto justify-center mb-5">
+            <span className="zellige-star text-xl text-golden" />
+          </div>
           <h3 className="text-2xl font-bold text-navy dark:text-cream mb-2">No reservations here</h3>
           <p className="text-navy/60 dark:text-cream/60">Reservations from guests will appear here.</p>
         </div>
@@ -101,12 +103,15 @@ export default function HostReservationsPage() {
           {visible.map((res) => {
             const meta = STATUS_META[res.status];
             return (
-              <div key={res.id} className="bg-white dark:bg-navy/30 rounded-3xl border border-cream/20 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-sm">
-                <img src={res.avatar} alt={res.guest} className="w-14 h-14 rounded-full object-cover" />
+              <div key={res.id} className="bg-white dark:bg-navy/30 rounded-3xl border border-cream/20 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                <img src={res.avatar} alt={res.guest} className="w-14 h-14 rounded-full object-cover shrink-0" loading="lazy" />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-bold text-navy dark:text-cream">{res.guest}</h3>
-                    <span className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase", meta.cls)}>{meta.label}</span>
+                    <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase", meta.cls)}>
+                      <span className={cn("w-1.5 h-1.5 rounded-full", meta.dot)} />
+                      {meta.label}
+                    </span>
                   </div>
                   <p className="text-navy/60 dark:text-cream/60 text-sm mt-0.5">{res.property}</p>
                   <p className="flex items-center gap-1 text-navy/50 dark:text-cream/50 text-xs mt-1">

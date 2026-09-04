@@ -24,6 +24,9 @@ export default function Home() {
         <section className="py-12 px-6 max-w-7xl mx-auto">
           <div className="mb-12 flex justify-between items-end">
             <div>
+              <div aria-hidden className="ornament-divider mb-4">
+                <span className="zellige-star text-lg text-golden" />
+              </div>
               <h2 className="text-4xl font-bold text-navy mb-4">Stay somewhere unforgettable</h2>
               <p className="text-navy/60 max-w-xl">
                 Explore unique homes and extraordinary spaces that inspire your next journey.
@@ -47,14 +50,19 @@ export default function Home() {
 
       <RecentlyViewed />
 
-      <section className="py-24 px-6 bg-navy text-cream text-center">
-        <div className="max-w-3xl mx-auto space-y-8">
+      <section className="relative py-24 px-6 bg-navy text-cream text-center overflow-hidden">
+        <div aria-hidden className="absolute inset-0 pattern-zellige-gold opacity-25" />
+        <div aria-hidden className="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[500px] glow-gold opacity-30 pointer-events-none" />
+        <div className="relative max-w-3xl mx-auto space-y-8">
+          <div aria-hidden className="ornament-divider mx-auto justify-center">
+            <span className="zellige-star text-xl text-golden" />
+          </div>
           <h2 className="text-5xl font-bold leading-tight">
             Ready to find <br />
             <span className="text-golden">your place to belong?</span>
           </h2>
           <p className="text-xl text-cream/60 font-light">
-            Join thousands of travelers discovering the hidden gems of Morocco and beyond.
+            Discover Morocco. Stay beautifully — hand-picked riads, desert camps and hidden gems across the Kingdom.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/explore">

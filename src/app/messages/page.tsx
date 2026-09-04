@@ -80,26 +80,38 @@ export default function MessagesPage() {
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 ? (
               <div className="p-8 text-center">
-                <MessageCircle size={48} className="text-navy/20 mx-auto mb-4" />
-                <p className="text-navy/50 text-sm">No conversations yet</p>
+                <div aria-hidden className="ornament-divider mx-auto justify-center mb-4">
+                  <span className="zellige-star text-lg text-golden" />
+                </div>
+                <div className="relative w-16 h-16 mx-auto mb-4">
+                  <div className="absolute inset-0 rounded-full bg-golden/10" />
+                  <MessageCircle size={48} className="text-golden/50 mx-auto relative" />
+                </div>
+                <p className="text-navy/50 text-sm font-semibold">No conversations yet</p>
                 <p className="text-navy/30 text-xs mt-1">Message a host from a property page</p>
               </div>
             ) : (
               conversations.map((conv) => {
                 const lastMsg = conv.messages[conv.messages.length - 1];
                 const isActive = selectedConv?.id === conv.id;
+                const unread = conv.messages.filter((m) => m.senderId !== 'user-me' && !m.read).length;
                 return (
                   <button key={conv.id} onClick={() => setSelectedConv(conv)}
                     className={`w-full text-left p-4 border-b border-navy/5 transition-colors ${isActive ? 'bg-golden/10' : 'hover:bg-cream/30'}`}>
                     <div className="flex items-center gap-3">
-                      <img src={conv.hostAvatar} alt={conv.hostName} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                      <img src={conv.hostAvatar} alt={conv.hostName} className="w-12 h-12 rounded-full object-cover shrink-0" loading="lazy" />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-2">
                           <p className="font-bold text-navy text-sm truncate">{conv.hostName}</p>
                           <span className="text-[10px] text-navy/40 shrink-0">{lastMsg ? new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
                         </div>
                         <p className="text-navy/40 text-xs truncate">{conv.propertyName}</p>
-                        <p className="text-navy/60 text-xs truncate mt-0.5">{lastMsg?.content || 'No messages yet'}</p>
+                        <div className="flex items-center justify-between gap-2 mt-0.5">
+                          <p className={`text-xs truncate ${unread ? 'font-bold text-navy' : 'text-navy/60'}`}>{lastMsg?.content || 'No messages yet'}</p>
+                          {unread > 0 && (
+                            <span className="grid place-items-center min-w-5 h-5 px-1 rounded-full bg-orange text-white text-[10px] font-bold shrink-0">{unread}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </button>
@@ -150,10 +162,12 @@ export default function MessagesPage() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-center p-8">
+            <div className="flex-1 items-center justify-center text-center p-8">
               <div>
-                <MessageCircle size={64} className="text-navy/10 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-navy mb-2">Your conversations</h3>
+                <div aria-hidden className="ornament-divider mx-auto justify-center mb-5">
+                  <span className="zellige-star text-xl text-golden" />
+                </div>
+                <h3 className="text-2xl font-bold text-navy mb-2">Your conversations</h3>
                 <p className="text-navy/50 text-sm">Select a conversation to start messaging.</p>
               </div>
             </div>

@@ -69,3 +69,30 @@ export function CardSkeleton() {
     </div>
   );
 }
+
+export function StayCardSkeleton() {
+  return (
+    <div className="bg-white rounded-3xl overflow-hidden border border-cream/20 shadow-sm">
+      <Skeleton className="aspect-[4/3] rounded-none" />
+      <div className="p-4 space-y-2.5">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-1/2" />
+        <Skeleton className="h-3 w-2/3" />
+        <Skeleton className="h-5 w-24" />
+      </div>
+    </div>
+  );
+}
+
+export function SearchBarSkeleton() {
+  return (
+    <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl border border-cream/30 p-2">
+      <div className="flex flex-col md:flex-row items-stretch gap-2 md:gap-0">
+        <Skeleton className="md:flex-1 h-12 m-2 rounded-xl" />
+        <Skeleton className="md:flex-1 h-12 m-2 rounded-xl" />
+        <Skeleton className="md:flex-1 h-12 m-2 rounded-xl" />
+        <Skeleton className="md:w-28 h-12 m-2 rounded-2xl" />
+      </div>
+    </div>
+  );
+}

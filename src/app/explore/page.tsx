@@ -1,15 +1,15 @@
 import { Suspense } from 'react';
 import ExploreContent from './ExploreContent';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Skeleton, StayCardSkeleton, SearchBarSkeleton } from '@/components/ui/Skeleton';
 
 function ExploreFallback() {
   return (
     <div className="min-h-screen bg-[#FAF7F2]">
-      <div className="pt-28 pb-8 px-4 sm:px-6 bg-navy">
+      <div className="pt-28 pb-8 px-4 sm:px-6 bg-gradient-to-b from-navy via-navy/95 to-navy/80">
         <div className="max-w-7xl mx-auto">
           <Skeleton className="h-12 w-56 mb-3" variant="text" />
           <Skeleton className="h-6 w-96 max-w-full mb-8" />
-          <Skeleton className="h-16 w-full max-w-4xl rounded-3xl bg-navy/40" />
+          <SearchBarSkeleton />
         </div>
       </div>
       <div className="py-6 px-4 sm:px-6 max-w-7xl mx-auto">
@@ -19,19 +19,29 @@ function ExploreFallback() {
           ))}
         </div>
       </div>
-      <div className="px-4 sm:px-6 max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="px-4 sm:px-6 max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
         {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="aspect-[4/3] rounded-3xl" />
+          <StayCardSkeleton key={i} />
         ))}
       </div>
     </div>
   );
 }
 
-export default function ExplorePage() {
+export default async function ExplorePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const key = Object.entries(params)
+    .map(([k, v]) => `${k}=${Array.isArray(v) ? v.join(',') : String(v ?? '')}`)
+    .sort()
+    .join('&');
+
   return (
     <Suspense fallback={<ExploreFallback />}>
-      <ExploreContent />
+      <ExploreContent key={key} />
     </Suspense>
   );
 }
