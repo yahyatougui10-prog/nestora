@@ -6,6 +6,7 @@ import { X, Check } from 'lucide-react';
 import { useSearch } from '@/hooks/useSearch';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
+import type { PropertyType, SearchParams } from '@/lib/types';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -20,7 +21,7 @@ const AMENITIES = [
 
 const PROPERTY_TYPES = [
   'Villa', 'Apartment', 'Riad', 'House', 'Studio', 'Cabin', 'Guesthouse', 'Hotel'
-];
+] as PropertyType[];
 
 const RATINGS = [4.5, 4.0, 3.5];
 
@@ -32,7 +33,7 @@ export function FilterDrawer() {
     searchParams.priceRange?.[0] || 0,
     searchParams.priceRange?.[1] || 1000
   ]);
-  const [typeFilter, setTypeFilter] = useState<string[]>(
+  const [typeFilter, setTypeFilter] = useState<PropertyType[]>(
     searchParams.propertyTypes || []
   );
   const [ratingFilter, setRatingFilter] = useState<number | null>(
@@ -43,13 +44,18 @@ export function FilterDrawer() {
   );
 
   const applyFilters = useCallback(() => {
-    const params: any = {};
-    if (priceFilter[0] > 0) params.priceRange = [priceFilter[0], priceFilter[1]];
+    const params: Partial<SearchParams> = {};
+    if (priceFilter[0] > 0) params.priceRange = priceFilter;
     if (typeFilter.length > 0) params.propertyTypes = typeFilter;
     if (ratingFilter) params.ratings = [ratingFilter];
     if (guestFilter && guestFilter !== 2) params.guests = guestFilter;
     updateSearch(params);
-    router.push(`/explore?${new URLSearchParams(params).toString()}`);
+    const q = new URLSearchParams();
+    if (priceFilter[0] > 0 || priceFilter[1] < 1000) q.set('priceRange', `${priceFilter[0]},${priceFilter[1]}`);
+    if (typeFilter.length > 0) q.set('propertyTypes', typeFilter.join(','));
+    if (ratingFilter) q.set('ratings', String(ratingFilter));
+    if (guestFilter && guestFilter !== 2) q.set('guests', String(guestFilter));
+    router.push(`/explore?${q.toString()}`);
   }, [priceFilter, typeFilter, ratingFilter, guestFilter, updateSearch, router]);
 
   const resetFilters = useCallback(() => {

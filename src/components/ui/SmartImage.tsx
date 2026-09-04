@@ -23,11 +23,25 @@ interface SmartImageProps {
   fallbackSrc?: string;
 }
 
-const PLACEHOLDER =
-  'data:image/svg+xml;utf8,' +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="#021F59" opacity="0.15"><rect width="24" height="24" rx="4"/></svg>`
-  );
+const RESPONSIVE_WIDTHS = [400, 800, 1200, 1600];
+
+function buildSrcSet(url: string): string | undefined {
+  if (!/images\.unsplash\.com/.test(url)) return undefined;
+  try {
+    const [base, query = ''] = url.split('?');
+    const params = new URLSearchParams(query);
+    return RESPONSIVE_WIDTHS.map((w) => {
+      const q = new URLSearchParams(params);
+      q.set('w', String(w));
+      q.set('auto', q.get('auto') || 'format');
+      q.set('fit', q.get('fit') || 'crop');
+      q.set('q', q.get('q') || '80');
+      return `${base}?${q.toString()} ${w}w`;
+    }).join(', ');
+  } catch {
+    return undefined;
+  }
+}
 
 export function SmartImage({
   src,
@@ -45,6 +59,7 @@ export function SmartImage({
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
+  const srcSet = !error ? buildSrcSet(currentSrc) : undefined;
 
   const handleError = () => {
     if (fallbackSrc && !error) {
@@ -70,7 +85,10 @@ export function SmartImage({
         width={width}
         height={height}
         loading={eager ? 'eager' : loading}
-        sizes={sizes}
+        fetchPriority={eager ? 'high' : undefined}
+        decoding="async"
+        srcSet={srcSet}
+        sizes={srcSet ? sizes : undefined}
         onLoad={() => setLoaded(true)}
         onError={handleError}
         className={cn(

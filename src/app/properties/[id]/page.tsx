@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Star, MapPin, ShieldCheck, User, Heart, Wifi, Wind, Utensils, Car, Monitor, Waves, Scissors, Coffee, Tv, Flame, Droplets, Dumbbell, Bath, ArrowLeft, Calendar, Users, BedSingle, BedDouble, Trash2, MessageSquare } from 'lucide-react';
+import { Star, MapPin, ShieldCheck, User, Heart, Wifi, Wind, Utensils, Car, Monitor, Waves, Scissors, Coffee, Tv, Flame, Droplets, Dumbbell, Bath, ArrowLeft, Calendar, Users, BedSingle, BedDouble, Trash2, MessageSquare, Grid3X3, SearchX } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { MOCK_PROPERTIES, HOST_DATA, MOCK_REVIEWS } from '@/lib/data';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -17,6 +17,7 @@ import { MessageModal } from '@/components/booking/MessageModal';
 import { GalleryViewer } from '@/components/property/GalleryViewer';
 import { FavoriteButton } from '@/components/property/FavoriteButton';
 import { StayMap } from '@/components/property/StayMap';
+import { SmartImage } from '@/components/ui/SmartImage';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -63,7 +64,9 @@ export default function PropertyPage() {
   if (!property) {
     return (
       <div className="pt-32 pb-12 px-6 max-w-7xl mx-auto text-center">
-        <div className="text-6xl mb-4">🔍</div>
+        <div className="w-20 h-20 mx-auto grid place-items-center rounded-full bg-cream/50 mb-5">
+          <SearchX size={40} className="text-navy/40" />
+        </div>
         <h2 className="text-3xl font-bold text-navy mb-2">Property not found</h2>
         <p className="text-navy/60 mb-6">This property may have been removed.</p>
         <Link href="/explore">
@@ -80,19 +83,19 @@ export default function PropertyPage() {
   const isFav = isFavorite(property.id);
 
   return (
-    <div className="pt-20 pb-12">
+    <div className="pt-20 pb-24 lg:pb-12">
       {/* Gallery */}
       <div className="relative aspect-[16/9] md:aspect-[21/9] overflow-hidden mb-6">
-        <img src={property.images[selectedImage]} alt={property.name} className="w-full h-full object-cover" />
+        <img src={property.images[selectedImage]} alt={property.name} className="w-full h-full object-cover" loading="eager" fetchPriority="high" decoding="async" />
         <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent" />
         <button
           onClick={() => openGallery(selectedImage)}
-          aria-label="View fullscreen"
-          className="absolute bottom-4 right-4 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full text-white text-sm font-medium hover:bg-black/60 transition-colors hidden sm:block"
+          aria-label="View all photos"
+          className="absolute bottom-4 right-4 flex items-center gap-2 px-4 py-2.5 bg-black/40 backdrop-blur-md rounded-full text-white text-sm font-medium hover:bg-black/60 transition-colors hidden sm:flex focus:outline-none focus-visible:ring-2 focus-visible:ring-golden"
         >
-          ⛶ View all photos ({property.gallery.length})
+          <Grid3X3 size={16} /> View all photos ({property.gallery.length})
         </button>
-        <button onClick={() => router.back()} className="absolute top-4 left-4 p-2 bg-black/40 backdrop-blur-sm rounded-full text-white hover:bg-black/60 transition-colors">
+        <button onClick={() => router.back()} aria-label="Go back" className="absolute top-4 left-4 grid place-items-center w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-golden">
           <ArrowLeft size={20} />
         </button>
         <div className="absolute top-4 right-4">
@@ -103,14 +106,15 @@ export default function PropertyPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 px-6 mb-8">
         {property.images.map((img, i) => (
           <button key={i} onClick={() => { setSelectedImage(i); openGallery(i); }} className={cn("aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-golden", i === selectedImage ? "border-golden" : "border-transparent hover:border-navy/20")}>
-            <img src={img} alt={property.name} className="w-full h-full object-cover" />
+            <SmartImage src={img} alt={`${property.name} photo ${i + 1}`} className="w-full h-full" imgClassName="transition-transform duration-300" sizes="(max-width: 768px) 50vw, 25vw" />
           </button>
         ))}
       </div>
 
       <div className="px-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-10">
         {/* Property Info */}
-        <div className="max-w-5xl mx-auto mb-12">
+        <div>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-navy mb-2">{property.name}</h1>
@@ -212,12 +216,12 @@ export default function PropertyPage() {
           )}
         </div>
 
-        {/* Booking Card */}
-        <div className="max-w-5xl mx-auto">
-          <div className="sticky bottom-4 bg-white p-6 md:p-8 rounded-3xl shadow-2xl border border-cream/20">
+        {/* Booking Card (desktop right column) */}
+        <div className="hidden lg:block">
+          <div className="sticky top-24 bg-white p-8 rounded-3xl shadow-2xl border border-cream/20">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <span className="text-3xl font-bold text-navy">${property.price}</span>
+                <span className="text-3xl font-black text-navy">${property.price}</span>
                 <span className="text-navy/60 ml-1">/ night</span>
               </div>
               <div className="flex items-center gap-1">
@@ -237,7 +241,7 @@ export default function PropertyPage() {
 
             <button
               onClick={() => setShowBooking(true)}
-              className="w-full bg-golden hover:bg-orange text-navy font-bold py-4 rounded-2xl text-lg shadow-lg transition-all hover:shadow-xl"
+              className="w-full bg-golden hover:bg-orange text-navy font-black py-4 rounded-2xl text-lg shadow-lg transition-all hover:shadow-xl active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-orange focus-visible:ring-offset-2"
             >
               Reserve
             </button>
@@ -263,6 +267,21 @@ export default function PropertyPage() {
               </div>
             )}
           </div>
+        </div>
+        </div>
+
+        {/* Mobile sticky booking CTA */}
+        <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-cream/30 px-5 py-3 flex items-center justify-between gap-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          <div>
+            <span className="text-2xl font-black text-navy">${property.price}</span>
+            <span className="text-navy/50 text-sm"> / night</span>
+          </div>
+          <button
+            onClick={() => setShowBooking(true)}
+            className="px-7 py-3.5 bg-golden hover:bg-orange text-navy font-black rounded-2xl text-base shadow-lg transition-all active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange"
+          >
+            Reserve
+          </button>
         </div>
       </div>
 

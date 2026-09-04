@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { SmartImage } from '@/components/ui/SmartImage';
 
 export default function Hero() {
   return (
@@ -14,10 +15,13 @@ export default function Hero() {
           transition={{ duration: 2 }}
           className="w-full h-full"
         >
-          <img
-            src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=2000"
+          <SmartImage
+            src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750"
             alt="Luxury Villa"
-            className="w-full h-full object-cover"
+            eager
+            sizes="100vw"
+            className="w-full h-full"
+            imgClassName="w-full h-full object-cover"
           />
         </motion.div>
         <div className="absolute inset-0 bg-gradient-to-b from-navy/60 via-navy/40 to-navy/80" />

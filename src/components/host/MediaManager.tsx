@@ -29,7 +29,7 @@ export function HostMediaManager({ onUpload, initialItems = [] }: HostMediaManag
   const { addToast } = useToastContext();
   const [items, setItems] = useState<MediaItem[]>(initialItems);
   const [dragging, setDragging] = useState(false);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -140,8 +140,7 @@ export function HostMediaManager({ onUpload, initialItems = [] }: HostMediaManag
         />
         <button
           className="mt-3 w-full py-2 bg-navy text-cream rounded-full text-sm font-bold hover:bg-orange transition-colors"
-          onClick={() => // @ts-ignore
-fileInputRef.current?.click()}
+          onClick={() => fileInputRef.current?.click()}
         >
           Select from device
         </button>

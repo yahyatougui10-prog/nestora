@@ -1,19 +1,28 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Search, MapPin, CalendarDays } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
+
+function parseGuests(value: string | null): number {
+  if (!value) return 2;
+  const n = parseInt(value, 10);
+  return Number.isFinite(n) && n >= 1 ? n : 2;
+}
 
 export function PremiumSearchBar() {
   const params = useSearchParams();
   const router = useRouter();
-  const [location, setLocation] = useState(params.get('destination') || 'M Marrakech');
-  const [guests, setGuests] = useState(Number(params.get('guests')) || 2);
+  const [location, setLocation] = useState(params.get('destination') || params.get('location') || 'Marrakech');
+  const [guests, setGuests] = useState<number>(() => parseGuests(params.get('guests')));
+  const [lastGuestsParam, setLastGuestsParam] = useState<string | null>(params.get('guests'));
 
-  useEffect(() => {
-    const g = params.get('guests');
-    if (g) setGuests(Math.max(1, parseInt(g)));
-  }, [params]);
+  const currentGuestsParam = params.get('guests');
+  if (currentGuestsParam !== lastGuestsParam) {
+    setLastGuestsParam(currentGuestsParam);
+    const next = parseGuests(currentGuestsParam);
+    if (next !== guests) setGuests(next);
+  }
 
   const handleSearch = () => {
     const q = new URLSearchParams();

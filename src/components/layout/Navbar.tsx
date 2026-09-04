@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Heart, User, Menu, X, Globe, Moon, Sun, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
@@ -21,18 +21,18 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const { resolvedTheme, setMode, direction } = useThemeContext();
   const { language, setLanguage } = useThemeContext();
   const { user, isAuthenticated, logout } = useAuthContext();
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
+    const handleScroll = () => setIsScrolled(window.scrollY > 24);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -49,24 +49,25 @@ export default function Navbar() {
     { label: 'Host', href: '/host' },
   ];
 
+  const isActive = (href: string) =>
+    pathname === href || (href !== '/explore' && pathname.startsWith(`${href}/`));
+
   return (
     <nav
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-4 sm:px-6 py-3",
-        isScrolled
-          ? "bg-navy/90 backdrop-blur-xl shadow-xl text-cream"
-          : "bg-transparent text-white"
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 sm:px-6",
+        isScrolled ? "py-2 bg-navy/90 backdrop-blur-xl shadow-xl text-cream" : "py-3 bg-transparent text-white"
       )}
       dir={direction}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group z-50">
-          <div className="relative w-10 h-10 flex items-center justify-center bg-golden rounded-xl transition-transform group-hover:scale-110">
+        <Link href="/" className="flex items-center gap-2 group z-50" aria-label="NESTORA home">
+          <div className={cn("relative flex items-center justify-center bg-golden rounded-xl transition-all group-hover:scale-110", isScrolled ? "w-9 h-9" : "w-10 h-10")}>
             <div className="absolute inset-0 border-2 border-navy rounded-xl scale-75 group-hover:scale-90 transition-transform" />
-            <span className="text-navy font-bold text-xl">N</span>
+            <span className="text-navy font-black text-xl">N</span>
           </div>
-          <span className="text-2xl font-bold tracking-tight">NESTORA</span>
+          <span className="text-2xl font-black tracking-tight">NESTORA</span>
         </Link>
 
         {/* Center Navigation */}
@@ -75,15 +76,16 @@ export default function Navbar() {
             <Link
               key={item.label + item.href}
               href={item.href}
+              aria-current={isActive(item.href) ? 'page' : undefined}
               className={cn(
-                "relative px-4 py-2 rounded-xl text-sm font-medium transition-all",
-                pathname === item.href
+                "relative px-4 py-2 rounded-xl text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-golden",
+                isActive(item.href)
                   ? "bg-white/10 text-golden"
                   : "text-white/80 hover:text-golden hover:bg-white/5"
               )}
             >
               {item.label}
-              {pathname === item.href && (
+              {isActive(item.href) && (
                 <motion.div
                   layoutId="navbar-active"
                   className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-golden rounded-full"
@@ -160,7 +162,9 @@ export default function Navbar() {
           )}
 
           <button
-            className="md:hidden p-2 z-50"
+            className="md:hidden grid place-items-center w-11 h-11 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-golden"
+            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={isMobileMenuOpen}
             onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -182,10 +186,11 @@ export default function Navbar() {
             <Link
               key={item.label + item.href}
               href={item.href}
+              aria-current={isActive(item.href) ? 'page' : undefined}
                   onClick={() => { setMobileMenuOpen(false); setShowUserMenu(false); }}
                   className={cn(
-                    "px-4 py-3 rounded-xl text-base font-medium",
-                    pathname === item.href ? "bg-white/10 text-golden" : "text-cream/80"
+                    "px-4 py-3.5 rounded-xl text-base font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-golden",
+                    isActive(item.href) ? "bg-white/10 text-golden" : "text-cream/80"
                   )}
                 >
                   {item.label}
