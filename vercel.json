@@ -1,0 +1,37 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ],
+      "conditions": ["production"]
+    }
+  ],
+  "redirects": [
+    "/about/:path*", "/about/:path*",
+    "/contact/:path*", "/contact/:path*",
+    "/privacy/:path*", "/privacy/:path*",
+    "/terms/:path*", "/terms/:path*",
+    "/support/:path*", "/support/:path*",
+    "/safety/:path*", "/safety/:path*"
+  ],
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "http://localhost:3000/api/:path*" }
+  ]
+}
