@@ -28,20 +28,10 @@ function ExploreFallback() {
   );
 }
 
-export default async function ExplorePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const params = await searchParams;
-  const key = Object.entries(params)
-    .map(([k, v]) => `${k}=${Array.isArray(v) ? v.join(',') : String(v ?? '')}`)
-    .sort()
-    .join('&');
-
+export default function ExplorePage() {
   return (
     <Suspense fallback={<ExploreFallback />}>
-      <ExploreContent key={key} />
+      <ExploreContent />
     </Suspense>
   );
 }
